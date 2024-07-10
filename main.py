@@ -9,9 +9,8 @@ from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import callbacks
 import tensorflow.compat.v1 as tf
-
-# Disable TensorFlow v2 behavior
 tf.disable_v2_behavior()
+
 
 # Function to encode cyclic features
 def encode(data, col, max_val):
