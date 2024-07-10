@@ -8,6 +8,10 @@ from keras.layers import Dense, Dropout
 from keras.optimizers import Adam
 from sklearn.metrics import confusion_matrix, classification_report
 from keras import callbacks
+import tensorflow.compat.v1 as tf
+
+# Disable TensorFlow v2 behavior
+tf.disable_v2_behavior()
 
 # Function to encode cyclic features
 def encode(data, col, max_val):
@@ -83,6 +87,6 @@ def main():
     y_pred = (y_pred > 0.5)
     
     st.write(classification_report(y_test, y_pred))
-    
+
 if __name__ == '__main__':
     main()
