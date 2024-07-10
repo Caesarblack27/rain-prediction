@@ -64,12 +64,9 @@ def build_model(X_train, y_train):
 def main():
     st.title('Rain Prediction App')
     
-    uploaded_file = st.file_uploader("Upload a CSV file", type=["csv"])
-    if uploaded_file is not None:
-        data = pd.read_csv(uploaded_file)
-    else:
-        url = "https://raw.githubusercontent.com/your_github_username/your_repository/master/weatherAUS.csv"
-        data = pd.read_csv(url)
+    # Load data from URL
+    url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
+    data = pd.read_csv(url)
     
     st.write(data.head())
     
