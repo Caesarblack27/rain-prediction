@@ -58,9 +58,7 @@ all_features = [
     'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
     'WindGustDir', 'WindGustSpeed', 'WindDir9am', 'WindDir3pm', 'WindSpeed9am',
     'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
-    'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday',
-    # Add additional features needed by the model here
-    # Make sure to fill them with appropriate default values
+    'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm'
 ]
 
 # Main Streamlit app
@@ -95,16 +93,6 @@ def main():
     if st.button('Predict'):
         try:
             # Create DataFrame from user inputs
-            user_data_df = pd.DataFrame(user_inputs, index=[0])
-
-            # Handle unseen labels in WindDir9am and WindDir3pm
-            wind_dir_9am_mode = data['WindDir9am'].mode()[0]
-            wind_dir_3pm_mode = data['WindDir3pm'].mode()[0]
-
-            check_and_update_label_encoder(label_encoder_wind_dir_9am, data['WindDir9am'], wind_dir_9am_mode)
-            check_and_update_label_encoder(label_encoder_wind_dir_3pm, data['WindDir3pm'], wind_dir_3pm_mode)
-
-            # Prepare user data for prediction
             user_data = {
                 'Location': label_encoder_location.transform([user_inputs['Location']])[0],
                 'MinTemp': user_inputs['MinTemp'],
@@ -125,8 +113,7 @@ def main():
                 'Cloud9am': user_inputs['Cloud9am'],
                 'Cloud3pm': user_inputs['Cloud3pm'],
                 'Temp9am': user_inputs['Temp9am'],
-                'Temp3pm': user_inputs['Temp3pm'],
-                'RainToday': user_inputs['RainToday']
+                'Temp3pm': user_inputs['Temp3pm']
             }
 
             user_data_df = pd.DataFrame(user_data, index=[0])
