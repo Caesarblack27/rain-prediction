@@ -82,10 +82,16 @@ def main():
         # Scale user data
         user_data_scaled = scaler.transform(user_data)
 
+        # Print the shape of user_data_scaled for debugging
+        st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
+
         # Predict
-        prediction = model.predict(user_data_scaled)
-        prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
-        st.write(f'Will it rain tomorrow? {prediction_result}')
+        try:
+            prediction = model.predict(user_data_scaled)
+            prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
+            st.write(f'Will it rain tomorrow? {prediction_result}')
+        except Exception as e:
+            st.error(f"Prediction error: {str(e)}")
 
 if __name__ == '__main__':
     main()
