@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 from keras.models import load_model
 import requests
 from io import BytesIO
-import h5py  # New import for handling HDF5 files
+import h5py
 
 # Load data from URL
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
@@ -67,18 +67,22 @@ def main():
     wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
 
     if st.button('Predict'):
-        # Encode and scale user input
-        user_data = pd.DataFrame({
-            'Location': [label_encoder.transform([location])[0]],
-            'MinTemp': [min_temp],
-            'MaxTemp': [max_temp],
-            'WindGustDir': [label_encoder.transform([wind_gust_dir])[0]],
-            'WindGustSpeed': [wind_gust_speed]
-        })
+        try:
+            # Encode and scale user input
+            user_data = pd.DataFrame({
+                'Location': [label_encoder.transform([location])[0]],
+                'MinTemp': [min_temp],
+                'MaxTemp': [max_temp],
+                'WindGustDir': [label_encoder.transform([wind_gust_dir])[0]],
+                'WindGustSpeed': [wind_gust_speed]
+            })
 
-        # Predict
-        prediction = predict_rain(model, user_data)
-        st.write(f'Will it rain today? {"Yes" if prediction[0][0] >= 0.5 else "No"}')
+            # Predict
+            prediction = predict_rain(model, user_data)
+            st.write(f'Will it rain today? {"Yes" if prediction[0][0] >= 0.5 else "No"}')
+
+        except ValueError as e:
+            st.error(str(e))
 
 if __name__ == '__main__':
     main()
