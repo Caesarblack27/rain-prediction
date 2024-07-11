@@ -31,10 +31,10 @@ data.fillna(data.mode().iloc[0], inplace=True)
 
 # Encode categorical variables
 label_encoder_location = LabelEncoder()
-label_encoder_location.fit(data['Location'].unique())
+data['Location'] = label_encoder_location.fit_transform(data['Location'])
 
 label_encoder_wind_gust_dir = LabelEncoder()
-label_encoder_wind_gust_dir.fit(data['WindGustDir'].unique())
+data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
 
 # Feature and label separation
 X = data[['Location', 'MinTemp', 'MaxTemp', 'WindGustDir', 'WindGustSpeed']]
@@ -42,12 +42,6 @@ y = data['RainTomorrow']
 
 # Scale features
 scaler = StandardScaler()
-
-# Encode categorical variables before scaling
-X['Location'] = label_encoder_location.transform(X['Location'])
-X['WindGustDir'] = label_encoder_wind_gust_dir.transform(X['WindGustDir'])
-
-# Fit and transform features
 X = scaler.fit_transform(X)
 
 # Main Streamlit app
@@ -63,10 +57,10 @@ def main():
 
     # User inputs
     st.subheader('Enter the weather details:')
-    location = st.selectbox('Location', data['Location'].unique())
+    location = st.selectbox('Location', label_encoder_location.classes_)
     min_temp = st.number_input('MinTemp', min_value=float(data['MinTemp'].min()), max_value=float(data['MinTemp'].max()), value=10.0)
     max_temp = st.number_input('MaxTemp', min_value=float(data['MaxTemp'].min()), max_value=float(data['MaxTemp'].max()), value=20.0)
-    wind_gust_dir = st.selectbox('WindGustDir', data['WindGustDir'].unique())
+    wind_gust_dir = st.selectbox('WindGustDir', label_encoder_wind_gust_dir.classes_)
     wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
 
     if st.button('Predict'):
