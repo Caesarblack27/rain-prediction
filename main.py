@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from keras.models import load_model
-import requests
 from io import BytesIO
+import requests
 import numpy as np
 
 # Function to load the pretrained model
