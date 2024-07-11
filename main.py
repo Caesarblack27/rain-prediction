@@ -43,12 +43,16 @@ data['Location'] = label_encoder_location.fit_transform(data['Location'])
 label_encoder_wind_gust_dir = LabelEncoder()
 data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
 
-# Feature and label separation
+# Select only the required features
 selected_features = ['Location', 'MinTemp', 'MaxTemp', 'WindGustDir', 'WindGustSpeed']
 X = data[selected_features]
 y = data['RainTomorrow']
 
-# Add default values for other features
+# Scale features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Default values for other features
 default_values = {
     'Rainfall': data['Rainfall'].mean(),
     'Evaporation': data['Evaporation'].mean(),
@@ -67,10 +71,6 @@ default_values = {
     'Temp3pm': data['Temp3pm'].mean(),
     'RainToday': label_encoder_location.transform([data['RainToday'].mode()[0]])[0]
 }
-
-# Scale features
-scaler = StandardScaler()
-X = scaler.fit_transform(data)
 
 # Main Streamlit app
 def main():
