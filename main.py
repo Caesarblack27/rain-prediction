@@ -91,7 +91,7 @@ def main():
     # Collect user inputs for each feature
     for feature in all_features:
         if feature == 'Location':
-            user_inputs[feature] = st.selectbox(feature, label_encoder_location.classes_)
+            user_inputs[feature] = st.selectbox(feature, label_encoder_location.classes_, index=0)
         elif feature == 'WindGustDir':
             user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.classes_)
         elif feature == 'WindDir9am' or feature == 'WindDir3pm':
