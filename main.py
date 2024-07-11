@@ -2,10 +2,8 @@ import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from keras.models import load_model
-from io import BytesIO
 import requests
-import tempfile
-import os
+from io import BytesIO
 import numpy as np
 
 # Function to load the pretrained model
@@ -16,15 +14,8 @@ def load_pretrained_model():
     response = requests.get(model_url)
     response.raise_for_status()
     
-    # Save model to a temporary file
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_model:
-        temp_model.write(response.content)
-        temp_model.close()
-        model = load_model(temp_model.name)
-    
-    # Delete temporary file after loading model
-    os.remove(temp_model.name)
-    
+    # Load model directly from content
+    model = load_model(BytesIO(response.content))
     return model
 
 # Load data from URL
