@@ -92,21 +92,21 @@ def main():
     for feature in all_features:
         if feature == 'Location':
             # Check if user input exists in label_encoder_location.classes_
-            if user_inputs[feature] in label_encoder_location.classes_:
+            if np.isin(user_inputs[feature], label_encoder_location.classes_):
                 user_inputs[feature] = st.selectbox(feature, label_encoder_location.inverse_transform(np.arange(len(label_encoder_location.classes_))))
             else:
                 st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
                 user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
         elif feature == 'WindGustDir':
             # Check if user input exists in label_encoder_wind_gust_dir.classes_
-            if user_inputs[feature] in label_encoder_wind_gust_dir.classes_:
+            if np.isin(user_inputs[feature], label_encoder_wind_gust_dir.classes_):
                 user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.inverse_transform(np.arange(len(label_encoder_wind_gust_dir.classes_))))
             else:
                 st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
                 user_inputs[feature] = label_encoder_wind_gust_dir.classes_[0]  # Use most common label
         elif feature == 'WindDir9am' or feature == 'WindDir3pm':
             # Check if user input exists in label_encoder_wind_dir_9am.classes_ or label_encoder_wind_dir_3pm.classes_
-            if user_inputs[feature] in label_encoder_wind_dir_9am.classes_:
+            if np.isin(user_inputs[feature], label_encoder_wind_dir_9am.classes_):
                 user_inputs[feature] = st.selectbox(feature, label_encoder_wind_dir_9am.inverse_transform(np.arange(len(label_encoder_wind_dir_9am.classes_))))
             else:
                 st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
