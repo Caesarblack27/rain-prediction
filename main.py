@@ -68,7 +68,6 @@ def check_and_update_label_encoder(label_encoder, column, mode_value):
     return label_encoder.transform([mode_value])[0]
 
 # Main Streamlit app
-# Main Streamlit app
 def main():
     st.title('Rain Prediction App')
 
@@ -81,6 +80,9 @@ def main():
 
     # Define scaler here, after model is loaded
     scaler = StandardScaler()
+
+    # Fit scaler to selected features
+    scaler.fit(data[selected_features])
 
     # User inputs
     st.subheader('Enter the weather details:')
@@ -129,7 +131,7 @@ def main():
         user_data_df = pd.DataFrame(user_data, index=[0])
 
         # Scale user data
-        user_data_scaled = scaler.transform(user_data_df.values)
+        user_data_scaled = scaler.transform(user_data_df[selected_features])
 
         # Print the shape of user_data_scaled for debugging
         st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
