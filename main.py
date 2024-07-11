@@ -99,32 +99,13 @@ def main():
                 if user_inputs[feature] not in label_encoder_location.classes_:
                     st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
                     user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
+            
+            # Convert user inputs to numeric form
+            for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
+                user_inputs[feature] = label_encoder_location.transform([user_inputs[feature]])[0]
 
             # Create DataFrame from user inputs
-            user_data = {
-                'Location': label_encoder_location.transform([user_inputs['Location']])[0],
-                'MinTemp': user_inputs['MinTemp'],
-                'MaxTemp': user_inputs['MaxTemp'],
-                'Rainfall': user_inputs['Rainfall'],
-                'Evaporation': user_inputs['Evaporation'],
-                'Sunshine': user_inputs['Sunshine'],
-                'WindGustDir': label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0],
-                'WindGustSpeed': user_inputs['WindGustSpeed'],
-                'WindDir9am': label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0],
-                'WindDir3pm': label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0],
-                'WindSpeed9am': user_inputs['WindSpeed9am'],
-                'WindSpeed3pm': user_inputs['WindSpeed3pm'],
-                'Humidity9am': user_inputs['Humidity9am'],
-                'Humidity3pm': user_inputs['Humidity3pm'],
-                'Pressure9am': user_inputs['Pressure9am'],
-                'Pressure3pm': user_inputs['Pressure3pm'],
-                'Cloud9am': user_inputs['Cloud9am'],
-                'Cloud3pm': user_inputs['Cloud3pm'],
-                'Temp9am': user_inputs['Temp9am'],
-                'Temp3pm': user_inputs['Temp3pm']
-            }
-
-            user_data_df = pd.DataFrame(user_data, index=[0])
+            user_data_df = pd.DataFrame([user_inputs])
 
             # Scale user data
             user_data_scaled = scaler.transform(user_data_df)
