@@ -6,6 +6,7 @@ from io import BytesIO
 import requests
 import tempfile
 import os
+import numpy as np
 
 # Function to load the pretrained model
 @st.cache(allow_output_mutation=True)
@@ -75,7 +76,7 @@ def main():
         encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
         # Prepare user data for prediction
-        user_data = [[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]]
+        user_data = np.array([[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]])
 
         # Scale user data
         user_data_scaled = scaler.transform(user_data)
