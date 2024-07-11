@@ -1,14 +1,10 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import train_test_split
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
-from keras.optimizers import Adam
-from keras import callbacks
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+from keras.models import load_model
+import requests
+from io import BytesIO
 
 # Load data from URL
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
@@ -19,7 +15,7 @@ data.fillna(data.mode().iloc[0], inplace=True)
 
 # Encode categorical variables
 label_encoder = LabelEncoder()
-categorical_cols = ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm', 'RainToday', 'RainTomorrow']
+categorical_cols = ['Location', 'WindGustDir']
 for col in categorical_cols:
     data[col] = label_encoder.fit_transform(data[col])
 
@@ -31,30 +27,27 @@ y = data['RainTomorrow']
 scaler = StandardScaler()
 X = scaler.fit_transform(X)
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Train-test split (not needed here since we're using a pre-trained model)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Build and train NN model
-def build_model(X_train, y_train):
-    model = Sequential()
-    model.add(Dense(units=32, kernel_initializer='uniform', activation='relu', input_dim=X_train.shape[1]))
-    model.add(Dense(units=32, kernel_initializer='uniform', activation='relu'))
-    model.add(Dense(units=16, kernel_initializer='uniform', activation='relu'))
-    model.add(Dropout(0.25))
-    model.add(Dense(units=8, kernel_initializer='uniform', activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(units=1, kernel_initializer='uniform', activation='sigmoid'))
-
-    opt = Adam(learning_rate=0.00009)
-    model.compile(optimizer=opt, loss='binary_crossentropy', metrics=['accuracy'])
-
-    early_stopping = callbacks.EarlyStopping(min_delta=0.001, patience=20, restore_best_weights=True)
-
-    history = model.fit(X_train, y_train, batch_size=32, epochs=150, callbacks=[early_stopping], validation_split=0.2)
-
+# Function to load pre-trained model
+def load_pretrained_model():
+    # GitHub URL for the pre-trained model file
+    model_url = "https://github.com/Caesarblack27/rain-prediction/raw/main/rain_prediction_model.h5"
+    
+    # Fetch the model file from GitHub
+    response = requests.get(model_url)
+    response.raise_for_status()
+    
+    # Load the model from memory
+    model = load_model(BytesIO(response.content))
+    
     return model
 
-# Predict rain
+# Load pre-trained model
+model = load_pretrained_model()
+
+# Predict rain function
 def predict_rain(model, input_data):
     input_data_scaled = scaler.transform(input_data)
     return model.predict(input_data_scaled)
@@ -62,9 +55,6 @@ def predict_rain(model, input_data):
 # Main Streamlit app
 def main():
     st.title('Rain Prediction App')
-
-    # Build and train the model
-    model = build_model(X_train, y_train)
 
     # User inputs
     st.subheader('Enter the weather details:')
