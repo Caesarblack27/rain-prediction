@@ -91,7 +91,7 @@ def main():
     # Collect user inputs for each feature
     for feature in all_features:
         if feature == 'Location':
-            user_inputs[feature] = st.selectbox(feature, label_encoder_location.classes_, index=0)
+            user_inputs[feature] = st.selectbox(feature, ['Adelaide', 'Albany', 'Albury', 'AliceSprings', 'BadgerysCreek', 'Ballarat', 'Bendigo', 'Brisbane', 'Cairns', 'Canberra', 'Cobar', 'CoffsHarbour', 'Dartmoor', 'Darwin', 'GoldCoast', 'Hobart', 'Katherine', 'Launceston', 'Melbourne', 'MelbourneAirport', 'Mildura', 'Moree', 'MountGambier', 'MountGinini', 'Newcastle', 'Nhil', 'NorahHead', 'NorfolkIsland', 'Nuriootpa', 'PearceRAAF', 'Penrith', 'Perth', 'PerthAirport', 'Portland', 'Richmond', 'Sale', 'SalmonGums', 'Sydney', 'SydneyAirport', 'Townsville', 'Tuggeranong', 'Uluru', 'WaggaWagga', 'Walpole', 'Watsonia', 'Williamtown', 'Witchcliffe', 'Wollongong', 'Woomera'], index=0)
         elif feature == 'WindGustDir':
             user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.classes_)
         elif feature == 'WindDir9am' or feature == 'WindDir3pm':
