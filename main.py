@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.models import load_model
 
 # Load data from URL
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
@@ -89,20 +90,14 @@ def main():
 
     if st.button('Predict'):
         try:
-            # Check and handle unseen labels for categorical variables
-            for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
-                if user_inputs[feature] not in label_encoder_location.classes_:
-                    st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
-                    user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
+            # Ensure all categorical features are transformed correctly
+            user_inputs['Location'] = label_encoder_location.transform([user_inputs['Location']])[0]
+            user_inputs['WindGustDir'] = label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0]
+            user_inputs['WindDir9am'] = label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0]
+            user_inputs['WindDir3pm'] = label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0]
 
             # Convert user inputs to DataFrame
             user_data_df = pd.DataFrame([user_inputs])
-
-            # Encode user input categorical data
-            user_data_df['Location'] = label_encoder_location.transform(user_data_df['Location'])
-            user_data_df['WindGustDir'] = label_encoder_wind_gust_dir.transform(user_data_df['WindGustDir'])
-            user_data_df['WindDir9am'] = label_encoder_wind_dir_9am.transform(user_data_df['WindDir9am'])
-            user_data_df['WindDir3pm'] = label_encoder_wind_dir_3pm.transform(user_data_df['WindDir3pm'])
 
             # Ensure numeric data is in correct format for scaling
             numeric_user_data = user_data_df[all_features].apply(pd.to_numeric, errors='coerce').fillna(0)
