@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.models import load_model
 import requests
@@ -30,108 +29,62 @@ def load_pretrained_model():
         st.error(f"Unable to load model: {str(e)}")
         return None
 
-# Load data from uploaded file
-uploaded_file = '/mnt/data/weatherAUS.csv'
-if uploaded_file:
-    data = pd.read_csv(uploaded_file)
+# Load data from URL
+url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
+data = pd.read_csv(url)
 
-    # Fill missing values
-    data.fillna(data.mode().iloc[0], inplace=True)
+# Fill missing values
+data.fillna(data.mode().iloc[0], inplace=True)
 
-    # Encode categorical variables
-    label_encoder_location = LabelEncoder()
-    data['Location'] = label_encoder_location.fit_transform(data['Location'])
+# Encode categorical variables
+label_encoder_location = LabelEncoder()
+data['Location'] = label_encoder_location.fit_transform(data['Location'])
 
-    label_encoder_wind_gust_dir = LabelEncoder()
-    data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
+label_encoder_wind_gust_dir = LabelEncoder()
+data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
 
-    label_encoder_wind_dir_9am = LabelEncoder()
-    data['WindDir9am'] = label_encoder_wind_dir_9am.fit_transform(data['WindDir9am'])
+# Feature and label separation
+X = data[['Location', 'MinTemp', 'MaxTemp', 'WindGustDir', 'WindGustSpeed']]
+y = data['RainTomorrow']
 
-    label_encoder_wind_dir_3pm = LabelEncoder()
-    data['WindDir3pm'] = label_encoder_wind_dir_3pm.fit_transform(data['WindDir3pm'])
+# Scale features
+scaler = StandardScaler()
+X = scaler.fit_transform(X)
 
-    label_encoder_rain_today = LabelEncoder()
-    data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
+# Main Streamlit app
+def main():
+    st.title('Rain Prediction App')
 
-    # Define all features needed for prediction
-    all_features = [
-        'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
-        'WindGustDir', 'WindGustSpeed', 'WindDir9am', 'WindDir3pm', 'WindSpeed9am',
-        'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
-        'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm'
-    ]
+    # Build and train the model
+    model = load_pretrained_model()
 
-    # Main Streamlit app
-    def main():
-        st.title('Rain Prediction App')
+    if model is None:
+        st.error("Failed to load the model. Please check the logs for details.")
+        return
 
-        # Load the pretrained model
-        model = load_pretrained_model()
+    # User inputs
+    st.subheader('Enter the weather details:')
+    location = st.selectbox('Location', label_encoder_location.classes_)
+    min_temp = st.number_input('MinTemp', min_value=float(data['MinTemp'].min()), max_value=float(data['MinTemp'].max()), value=10.0)
+    max_temp = st.number_input('MaxTemp', min_value=float(data['MaxTemp'].min()), max_value=float(data['MaxTemp'].max()), value=20.0)
+    wind_gust_dir = st.selectbox('WindGustDir', label_encoder_wind_gust_dir.classes_)
+    wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
 
-        if model is None:
-            st.error("Failed to load the model. Please check the logs for details.")
-            return
+    if st.button('Predict'):
+        # Encode user input
+        encoded_location = label_encoder_location.transform([location])[0]
+        encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
-        # Define scaler here, after model is loaded
-        scaler = StandardScaler()
+        # Prepare user data for prediction
+        user_data = [[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]]
 
-        # Prepare numeric data for scaling
-        numeric_data = data.drop(columns=['Date', 'RainToday', 'RainTomorrow'])  # Remove unnecessary columns
-        numeric_data = numeric_data.apply(pd.to_numeric, errors='coerce').fillna(0)  # Convert non-numeric to NaN and fill with 0
+        # Scale user data
+        user_data_scaled = scaler.transform(user_data)
 
-        # Fit scaler with numeric data
-        scaler.fit(numeric_data)
+        # Predict
+        prediction = model.predict(user_data_scaled)
+        prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
+        st.write(f'Will it rain tomorrow? {prediction_result}')
 
-        # User inputs
-        st.subheader('Enter the weather details:')
-        
-        # Initialize user input variables
-        user_inputs = {}
-        
-        # Collect user inputs for each feature
-        for feature in all_features:
-            if feature == 'Location':
-                user_inputs[feature] = st.selectbox(feature, label_encoder_location.inverse_transform(np.arange(len(label_encoder_location.classes_))))
-            elif feature == 'WindGustDir':
-                user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.inverse_transform(np.arange(len(label_encoder_wind_gust_dir.classes_))))
-            elif feature == 'WindDir9am' or feature == 'WindDir3pm':
-                user_inputs[feature] = st.selectbox(feature, label_encoder_wind_dir_9am.inverse_transform(np.arange(len(label_encoder_wind_dir_9am.classes_))))
-            else:
-                user_inputs[feature] = st.number_input(feature, value=float(data[feature].mode()[0]))
-
-        if st.button('Predict'):
-            try:
-                # Ensure the input features are encoded correctly
-                location_code = label_encoder_location.transform([user_inputs['Location']])[0]
-                wind_gust_dir_code = label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0]
-                wind_dir_9am_code = label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0]
-                wind_dir_3pm_code = label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0]
-
-                # Prepare user input for prediction
-                user_data = np.array([[
-                    location_code, user_inputs['MinTemp'], user_inputs['MaxTemp'], user_inputs['Rainfall'],
-                    user_inputs['Evaporation'], user_inputs['Sunshine'], wind_gust_dir_code,
-                    user_inputs['WindGustSpeed'], wind_dir_9am_code, wind_dir_3pm_code,
-                    user_inputs['WindSpeed9am'], user_inputs['WindSpeed3pm'], user_inputs['Humidity9am'],
-                    user_inputs['Humidity3pm'], user_inputs['Pressure9am'], user_inputs['Pressure3pm'],
-                    user_inputs['Cloud9am'], user_inputs['Cloud3pm'], user_inputs['Temp9am'],
-                    user_inputs['Temp3pm']
-                ]])
-
-                # Scale numeric user data
-                scaled_user_data = scaler.transform(user_data[:, 1:].astype(float))
-
-                # Combine categorical and scaled numeric data
-                user_data_scaled = np.hstack((user_data[:, 0].reshape(-1, 1), scaled_user_data))
-
-                # Make prediction
-                prediction = model.predict(user_data_scaled)
-                prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
-                st.write(f'Will it rain tomorrow? {prediction_result}')
-
-            except Exception as e:
-                st.error(f"Prediction error: {str(e)}")
-
-    if __name__ == '__main__':
-        main()
+if __name__ == '__main__':
+    main()
