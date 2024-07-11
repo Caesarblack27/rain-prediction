@@ -9,7 +9,7 @@ import requests
 @st.cache(allow_output_mutation=True)
 def load_pretrained_model():
     # Load the model from GitHub
-    model_url = "https://github.com/Caesarblack27/rain-prediction/raw/main/rain_prediction_model.h5"
+    model_url = "https://github.com/Caesarblack27/rain-prediction/blob/14a0612231b8b1a5ee68b92ba850fee4e77762dc/rain_prediction_model.h5"
     response = requests.get(model_url)
     response.raise_for_status()
     model = load_model(BytesIO(response.content))
