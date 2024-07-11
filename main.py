@@ -34,8 +34,14 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 # Function to load pretrained model
 def load_pretrained_model():
     model_url = "https://github.com/Caesarblack27/rain-prediction/raw/main/rain_prediction_model.h5"
-    response = requests.get(model_url)
-    response.raise_for_status()
+    try:
+        response = requests.get(model_url)
+        response.raise_for_status()
+        model = load_model(BytesIO(response.content))
+        return model
+    except Exception as e:
+        print(f"Error loading pretrained model: {e}")
+        return None
     
     # Load the model from memory
     model = load_model(BytesIO(response.content))
