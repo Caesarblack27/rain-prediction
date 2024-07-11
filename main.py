@@ -90,6 +90,18 @@ def main():
         encoded_location = label_encoder_location.transform([location])[0]
         encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
+        # Handle unseen labels in WindDir9am and WindDir3pm
+        wind_dir_9am_mode = data['WindDir9am'].mode()[0]
+        wind_dir_3pm_mode = data['WindDir3pm'].mode()[0]
+
+        if wind_dir_9am_mode not in label_encoder_wind_dir_9am.classes_:
+            label_encoder_wind_dir_9am.classes_ = np.append(label_encoder_wind_dir_9am.classes_, wind_dir_9am_mode)
+        encoded_wind_dir_9am = label_encoder_wind_dir_9am.transform([wind_dir_9am_mode])[0]
+
+        if wind_dir_3pm_mode not in label_encoder_wind_dir_3pm.classes_:
+            label_encoder_wind_dir_3pm.classes_ = np.append(label_encoder_wind_dir_3pm.classes_, wind_dir_3pm_mode)
+        encoded_wind_dir_3pm = label_encoder_wind_dir_3pm.transform([wind_dir_3pm_mode])[0]
+
         # Prepare user data for prediction
         user_data = {
             'Location': encoded_location,
@@ -100,8 +112,8 @@ def main():
             'Sunshine': data['Sunshine'].mode()[0],
             'WindGustDir': encoded_wind_gust_dir,
             'WindGustSpeed': wind_gust_speed,
-            'WindDir9am': label_encoder_wind_dir_9am.transform([data['WindDir9am'].mode()[0]])[0],
-            'WindDir3pm': label_encoder_wind_dir_3pm.transform([data['WindDir3pm'].mode()[0]])[0],
+            'WindDir9am': encoded_wind_dir_9am,
+            'WindDir3pm': encoded_wind_dir_3pm,
             'WindSpeed9am': data['WindSpeed9am'].mode()[0],
             'WindSpeed3pm': data['WindSpeed3pm'].mode()[0],
             'Humidity9am': data['Humidity9am'].mode()[0],
