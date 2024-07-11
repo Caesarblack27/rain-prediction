@@ -19,7 +19,7 @@ data.fillna(data.mode().iloc[0], inplace=True)
 
 # Encode categorical variables
 label_encoder = LabelEncoder()
-categorical_cols = ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']
+categorical_cols = ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm', 'RainToday', 'RainTomorrow']
 for col in categorical_cols:
     data[col] = label_encoder.fit_transform(data[col])
 
