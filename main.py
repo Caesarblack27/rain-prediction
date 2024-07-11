@@ -75,6 +75,9 @@ def main():
     # Define scaler here, after model is loaded
     scaler = StandardScaler()
 
+    # Fit scaler with training data
+    scaler.fit(data.drop(columns=['RainTomorrow']))  # Assuming 'RainTomorrow' is the target column
+
     # User inputs
     st.subheader('Enter the weather details:')
     
@@ -107,8 +110,8 @@ def main():
             # Create DataFrame from user inputs
             user_data_df = pd.DataFrame([user_inputs])
 
-            # Scale user data
-            user_data_scaled = scaler.transform(user_data_df)
+            # Scale user data using fitted scaler
+            user_data_scaled = scaler.transform(user_data_df.drop(columns=['RainTomorrow']))  # Exclude target column
 
             # Print the shape of user_data_scaled for debugging
             st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
