@@ -87,6 +87,8 @@ def main():
             user_inputs[feature] = st.selectbox(feature, label_encoder_location.classes_)
         elif feature == 'WindGustDir':
             user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.classes_)
+        elif feature == 'WindDir9am' or feature == 'WindDir3pm':
+            user_inputs[feature] = st.selectbox(feature, label_encoder_wind_dir_9am.classes_)
         else:
             user_inputs[feature] = st.number_input(feature, value=float(data[feature].mode()[0]))
 
