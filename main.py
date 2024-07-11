@@ -2,33 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from tensorflow.keras.models import load_model
-import requests
-import tempfile
-import os
-
-# Function to load the pretrained model
-@st.cache(allow_output_mutation=True)
-def load_pretrained_model():
-    try:
-        # Load model from GitHub
-        model_url = "https://github.com/Caesarblack27/rain-prediction/raw/main/rain_prediction_model.h5"
-        response = requests.get(model_url)
-        response.raise_for_status()
-        
-        # Save model to a temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_model:
-            temp_model.write(response.content)
-            temp_model.close()
-            model = load_model(temp_model.name)
-        
-        # Delete temporary file after loading model
-        os.remove(temp_model.name)
-        
-        return model
-    except Exception as e:
-        st.error(f"Unable to load model: {str(e)}")
-        return None
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.callbacks import EarlyStopping
 
 # Load data from URL
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
@@ -61,33 +38,34 @@ all_features = [
     'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm'
 ]
 
+# Prepare dataset for training
+X = data[all_features]
+y = data['RainTomorrow'].apply(lambda x: 1 if x == 'Yes' else 0)
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize the dataset
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Function to create the model
+def create_model(input_dim):
+    model = Sequential()
+    model.add(Dense(64, input_dim=input_dim, activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
 # Main Streamlit app
 def main():
     st.title('Rain Prediction App')
 
-    # Load the pretrained model
-    model = load_pretrained_model()
-
-    if model is None:
-        st.error("Failed to load the model. Please check the logs for details.")
-        return
-
-    # Define scaler here, after model is loaded
-    scaler = StandardScaler()
-
-    # Prepare numeric data for scaling
-    numeric_data = data.drop(columns=['Date', 'RainToday', 'RainTomorrow'])  # Remove unnecessary columns
-    numeric_data = numeric_data.apply(pd.to_numeric, errors='coerce').fillna(0)  # Convert non-numeric to NaN and fill with 0
-
-    # Fit scaler with numeric data
-    scaler.fit(numeric_data)
-
-    # User inputs
-    st.subheader('Enter the weather details:')
-    
     # Initialize user input variables
     user_inputs = {}
-    
+
     # Collect user inputs for each feature
     for feature in all_features:
         if feature == 'Location':
@@ -98,6 +76,16 @@ def main():
             user_inputs[feature] = st.selectbox(feature, label_encoder_wind_dir_9am.inverse_transform(np.arange(len(label_encoder_wind_dir_9am.classes_))))
         else:
             user_inputs[feature] = st.number_input(feature, value=float(data[feature].mode()[0]))
+
+    if st.button('Train Model'):
+        # Create and train the model
+        model = create_model(X_train_scaled.shape[1])
+        early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+        history = model.fit(X_train_scaled, y_train, epochs=20, validation_split=0.2, callbacks=[early_stopping])
+
+        # Save the model
+        model.save('rain_prediction_model.h5')
+        st.success('Model trained and saved successfully!')
 
     if st.button('Predict'):
         try:
@@ -110,32 +98,23 @@ def main():
             # Convert user inputs to DataFrame
             user_data_df = pd.DataFrame([user_inputs])
 
+            # Encode user input categorical data
+            user_data_df['Location'] = label_encoder_location.transform(user_data_df['Location'])
+            user_data_df['WindGustDir'] = label_encoder_wind_gust_dir.transform(user_data_df['WindGustDir'])
+            user_data_df['WindDir9am'] = label_encoder_wind_dir_9am.transform(user_data_df['WindDir9am'])
+            user_data_df['WindDir3pm'] = label_encoder_wind_dir_3pm.transform(user_data_df['WindDir3pm'])
+
             # Ensure numeric data is in correct format for scaling
-            numeric_user_data = user_data_df[numeric_data.columns]  # Ensure columns match
-            numeric_user_data = numeric_user_data.apply(pd.to_numeric, errors='coerce').fillna(0)
+            numeric_user_data = user_data_df[all_features].apply(pd.to_numeric, errors='coerce').fillna(0)
 
             # Scale numeric user data
             scaled_user_data = scaler.transform(numeric_user_data)
 
-            # Combine scaled user data with categorical data
-            location_code = label_encoder_location.transform([user_inputs['Location']])[0]
-            wind_gust_dir_code = label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0]
-            wind_dir_9am_code = label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0]
-            wind_dir_3pm_code = label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0]
-
-            user_data_scaled = np.hstack((
-                np.array([location_code, user_inputs['MinTemp'], user_inputs['MaxTemp'], user_inputs['Rainfall'],
-                          user_inputs['Evaporation'], user_inputs['Sunshine'], wind_gust_dir_code,
-                          user_inputs['WindGustSpeed'], wind_dir_9am_code, wind_dir_3pm_code,
-                          user_inputs['WindSpeed9am'], user_inputs['WindSpeed3pm'], user_inputs['Humidity9am'],
-                          user_inputs['Humidity3pm'], user_inputs['Pressure9am'], user_inputs['Pressure3pm'],
-                          user_inputs['Cloud9am'], user_inputs['Cloud3pm'], user_inputs['Temp9am'],
-                          user_inputs['Temp3pm']]),
-                scaled_user_data
-            ))
+            # Load the trained model
+            model = load_model('rain_prediction_model.h5')
 
             # Make prediction
-            prediction = model.predict(user_data_scaled)
+            prediction = model.predict(scaled_user_data)
             prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
             st.write(f'Will it rain tomorrow? {prediction_result}')
 
