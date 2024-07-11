@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from keras.models import load_model
 import requests
 from io import BytesIO
+import h5py  # New import for handling HDF5 files
 
 # Load data from URL
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
@@ -39,8 +40,9 @@ def load_pretrained_model():
     response = requests.get(model_url)
     response.raise_for_status()
     
-    # Load the model from memory
-    model = load_model(BytesIO(response.content))
+    # Load the model from BytesIO using h5py
+    with h5py.File(BytesIO(response.content), 'r') as f:
+        model = load_model(f)
     
     return model
 
