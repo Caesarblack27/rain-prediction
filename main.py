@@ -107,29 +107,34 @@ def main():
                     st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
                     user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
             
-            # Convert user inputs to numeric form
-            for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
-                user_inputs[feature] = label_encoder_location.transform([user_inputs[feature]])[0]
-
-            # Create DataFrame from user inputs
+            # Convert user inputs to DataFrame
             user_data_df = pd.DataFrame([user_inputs])
 
-            # Prepare numeric user data for scaling
+            # Ensure numeric data is in correct format for scaling
             numeric_user_data = user_data_df.drop(columns=['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm'])
-            numeric_user_data = numeric_user_data.apply(pd.to_numeric, errors='coerce').fillna(0)  # Convert non-numeric to NaN and fill with 0
+            numeric_user_data = numeric_user_data.apply(pd.to_numeric, errors='coerce').fillna(0)
 
-            # Scale user data using fitted scaler
-            user_data_scaled = scaler.transform(numeric_user_data)
+            # Scale numeric user data
+            scaled_user_data = scaler.transform(numeric_user_data)
 
-            # Combine scaled user data with categorical encoded features
-            user_data_scaled = np.hstack((np.array([user_inputs['Location'], user_inputs['WindGustDir'],
-                                                    user_inputs['WindDir9am'], user_inputs['WindDir3pm']]).reshape(1, -1),
-                                          user_data_scaled))
+            # Combine scaled user data with categorical data
+            location_code = label_encoder_location.transform([user_inputs['Location']])[0]
+            wind_gust_dir_code = label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0]
+            wind_dir_9am_code = label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0]
+            wind_dir_3pm_code = label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0]
 
-            # Print the shape of user_data_scaled for debugging
-            st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
+            user_data_scaled = np.hstack((
+                np.array([location_code, user_inputs['MinTemp'], user_inputs['MaxTemp'], user_inputs['Rainfall'],
+                          user_inputs['Evaporation'], user_inputs['Sunshine'], wind_gust_dir_code,
+                          user_inputs['WindGustSpeed'], wind_dir_9am_code, wind_dir_3pm_code,
+                          user_inputs['WindSpeed9am'], user_inputs['WindSpeed3pm'], user_inputs['Humidity9am'],
+                          user_inputs['Humidity3pm'], user_inputs['Pressure9am'], user_inputs['Pressure3pm'],
+                          user_inputs['Cloud9am'], user_inputs['Cloud3pm'], user_inputs['Temp9am'],
+                          user_inputs['Temp3pm']]),
+                scaled_user_data
+            ))
 
-            # Predict
+            # Make prediction
             prediction = model.predict(user_data_scaled)
             prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
             st.write(f'Will it rain tomorrow? {prediction_result}')
