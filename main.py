@@ -92,6 +92,12 @@ def main():
 
     if st.button('Predict'):
         try:
+            # Check and handle unseen labels for categorical variables
+            for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
+                if user_inputs[feature] not in label_encoder_location.classes_:
+                    st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
+                    user_inputs[feature] = data[feature].mode()[0]
+
             # Create DataFrame from user inputs
             user_data = {
                 'Location': label_encoder_location.transform([user_inputs['Location']])[0],
