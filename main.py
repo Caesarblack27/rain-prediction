@@ -3,6 +3,7 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.models import load_model
 import requests
+from io import BytesIO  # Perhatikan penambahan ini
 
 # Function to load the pretrained model
 @st.cache(allow_output_mutation=True)
@@ -14,7 +15,7 @@ def load_pretrained_model():
         response.raise_for_status()
         
         # Load model directly from content
-        model = load_model(BytesIO(response.content))
+        model = load_model(BytesIO(response.content), compile=False)  # Perhatikan penggunaan compile=False
         return model
     except Exception as e:
         st.error(f"Unable to load model: {str(e)}")
