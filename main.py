@@ -101,7 +101,7 @@ def main():
 
     if st.button('Predict'):
         try:
-            # Check and handle unseen labels for categorical variables
+            # Handle unseen labels for categorical variables
             for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
                 if user_inputs[feature] not in label_encoder_location.classes_:
                     st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
@@ -135,7 +135,7 @@ def main():
             ))
 
             # Make prediction
-            prediction = model.predict(user_data_scaled)
+            prediction = model.predict(user_data_scaled.reshape(1, -1))
             prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
             st.write(f'Will it rain tomorrow? {prediction_result}')
 
