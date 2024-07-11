@@ -98,7 +98,7 @@ def main():
             for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
                 if user_inputs[feature] not in label_encoder_location.classes_:
                     st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
-                    user_inputs[feature] = data[feature].mode()[0]
+                    user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
 
             # Create DataFrame from user inputs
             user_data = {
