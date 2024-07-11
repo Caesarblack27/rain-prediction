@@ -37,6 +37,9 @@ def preprocess_data(data):
     label_encoder = LabelEncoder()
     data['Location'] = label_encoder.fit_transform(data['Location'])
     
+    # Encoding target variable
+    data['RainTomorrow'] = data['RainTomorrow'].map({'Yes': 1, 'No': 0})
+    
     # Scaling numerical features
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(data.drop(['RainTomorrow'], axis=1))
