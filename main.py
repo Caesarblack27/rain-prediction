@@ -47,9 +47,17 @@ label_encoder_rain_today = LabelEncoder()
 data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
 
 # Select only the required features
-selected_features = ['Location', 'MinTemp', 'MaxTemp', 'WindGustDir', 'WindGustSpeed']
+selected_features = [
+    'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
+    'WindGustDir', 'WindGustSpeed', 'WindDir9am', 'WindDir3pm', 'WindSpeed9am',
+    'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
+    'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday'
+]
+
+# Ensure the feature list matches what was used during model training
+assert set(selected_features).issubset(data.columns), "Selected features do not match the dataset columns."
+
 X = data[selected_features]
-y = data['RainTomorrow']
 
 # Scale features
 scaler = StandardScaler()
@@ -80,16 +88,36 @@ def main():
         encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
         # Prepare user data for prediction
-        user_data = pd.DataFrame({
-            'Location': [encoded_location],
-            'MinTemp': [min_temp],
-            'MaxTemp': [max_temp],
-            'WindGustDir': [encoded_wind_gust_dir],
-            'WindGustSpeed': [wind_gust_speed]
-        })
+        user_data = {
+            'Location': encoded_location,
+            'MinTemp': min_temp,
+            'MaxTemp': max_temp,
+            'Rainfall': data['Rainfall'].mode()[0],
+            'Evaporation': data['Evaporation'].mode()[0],
+            'Sunshine': data['Sunshine'].mode()[0],
+            'WindGustDir': encoded_wind_gust_dir,
+            'WindGustSpeed': wind_gust_speed,
+            'WindDir9am': label_encoder_wind_gust_dir.transform([data['WindDir9am'].mode()[0]])[0],
+            'WindDir3pm': label_encoder_wind_gust_dir.transform([data['WindDir3pm'].mode()[0]])[0],
+            'WindSpeed9am': data['WindSpeed9am'].mode()[0],
+            'WindSpeed3pm': data['WindSpeed3pm'].mode()[0],
+            'Humidity9am': data['Humidity9am'].mode()[0],
+            'Humidity3pm': data['Humidity3pm'].mode()[0],
+            'Pressure9am': data['Pressure9am'].mode()[0],
+            'Pressure3pm': data['Pressure3pm'].mode()[0],
+            'Cloud9am': data['Cloud9am'].mode()[0],
+            'Cloud3pm': data['Cloud3pm'].mode()[0],
+            'Temp9am': data['Temp9am'].mode()[0],
+            'Temp3pm': data['Temp3pm'].mode()[0],
+            'RainToday': data['RainToday'].mode()[0]
+        }
+        user_data_df = pd.DataFrame(user_data, index=[0])
 
         # Scale user data
-        user_data_scaled = scaler.transform(user_data)
+        user_data_scaled = scaler.transform(user_data_df)
+
+        # Print the shape of user_data_scaled for debugging
+        st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
 
         # Predict
         try:
