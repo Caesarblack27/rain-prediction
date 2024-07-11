@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from keras.models import load_model
 from io import BytesIO
@@ -36,6 +35,12 @@ y = data['RainTomorrow']
 
 # Scale features
 scaler = StandardScaler()
+
+# Encode categorical variables before scaling
+X['Location'] = label_encoder_location.transform(X['Location'])
+X['WindGustDir'] = label_encoder_wind_gust_dir.transform(X['WindGustDir'])
+
+# Fit and transform features
 X = scaler.fit_transform(X)
 
 # Main Streamlit app
@@ -54,20 +59,15 @@ def main():
     wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
 
     if st.button('Predict'):
-        # Encode and scale user input
+        # Encode user input
         encoded_location = label_encoder_location.transform([location])[0]
         encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
-        user_data = pd.DataFrame({
-            'Location': [encoded_location],
-            'MinTemp': [min_temp],
-            'MaxTemp': [max_temp],
-            'WindGustDir': [encoded_wind_gust_dir],
-            'WindGustSpeed': [wind_gust_speed]
-        })
+        # Prepare user data for prediction
+        user_data = scaler.transform([[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]])
 
         # Predict
-        prediction = model.predict(scaler.transform(user_data))
+        prediction = model.predict(user_data)
         prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
         st.write(f'Will it rain tomorrow? {prediction_result}')
 
