@@ -15,7 +15,8 @@ def load_pretrained_model():
         response.raise_for_status()
         
         # Load model directly from content
-        model = load_model(BytesIO(response.content), compile=False)  # Perhatikan penggunaan compile=False
+        model_content = BytesIO(response.content)  # Simpan konten sebagai BytesIO
+        model = load_model(model_content, compile=False)  # Gunakan model_content sebagai objek BytesIO
         return model
     except Exception as e:
         st.error(f"Unable to load model: {str(e)}")
