@@ -75,10 +75,13 @@ def main():
         encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
         # Prepare user data for prediction
-        user_data = scaler.transform([[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]])
+        user_data = [[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]]
+
+        # Scale user data
+        user_data_scaled = scaler.transform(user_data)
 
         # Predict
-        prediction = model.predict(user_data)
+        prediction = model.predict(user_data_scaled)
         prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
         st.write(f'Will it rain tomorrow? {prediction_result}')
 
