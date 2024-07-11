@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from keras.models import load_model
+from tensorflow.keras.models import load_model
 from io import BytesIO
 import requests
 import numpy as np
@@ -14,9 +14,13 @@ def load_pretrained_model():
     response = requests.get(model_url)
     response.raise_for_status()
     
-    # Load model directly from content
-    model = load_model(BytesIO(response.content))
-    return model
+    try:
+        # Load model directly from content
+        model = load_model(BytesIO(response.content))
+        return model
+    except Exception as e:
+        st.error(f"Unable to load model: {str(e)}")
+        return None
 
 # Load data from URL
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
@@ -52,6 +56,10 @@ def main():
 
     # Build and train the model
     model = load_pretrained_model()
+
+    if model is None:
+        st.error("Failed to load the model. Please check the logs for details.")
+        return
 
     # User inputs
     st.subheader('Enter the weather details:')
