@@ -75,8 +75,12 @@ def main():
     # Define scaler here, after model is loaded
     scaler = StandardScaler()
 
-    # Fit scaler with training data
-    scaler.fit(data.drop(columns=['RainTomorrow']))  # Assuming 'RainTomorrow' is the target column
+    # Prepare numeric data for scaling
+    numeric_data = data.drop(columns=['RainTomorrow'])  # Assuming 'RainTomorrow' is the target column
+    numeric_data = numeric_data.apply(pd.to_numeric, errors='coerce').fillna(0)  # Convert non-numeric to NaN and fill with 0
+
+    # Fit scaler with numeric data
+    scaler.fit(numeric_data)
 
     # User inputs
     st.subheader('Enter the weather details:')
@@ -110,8 +114,17 @@ def main():
             # Create DataFrame from user inputs
             user_data_df = pd.DataFrame([user_inputs])
 
+            # Prepare numeric user data for scaling
+            numeric_user_data = user_data_df.drop(columns=['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm'])
+            numeric_user_data = numeric_user_data.apply(pd.to_numeric, errors='coerce').fillna(0)  # Convert non-numeric to NaN and fill with 0
+
             # Scale user data using fitted scaler
-            user_data_scaled = scaler.transform(user_data_df.drop(columns=['RainTomorrow']))  # Exclude target column
+            user_data_scaled = scaler.transform(numeric_user_data)
+
+            # Combine scaled user data with categorical encoded features
+            user_data_scaled = np.hstack((np.array([user_inputs['Location'], user_inputs['WindGustDir'],
+                                                    user_inputs['WindDir9am'], user_inputs['WindDir3pm']]).reshape(1, -1),
+                                          user_data_scaled))
 
             # Print the shape of user_data_scaled for debugging
             st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
