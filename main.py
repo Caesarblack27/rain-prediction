@@ -91,31 +91,22 @@ def main():
     # Collect user inputs for each feature
     for feature in all_features:
         if feature == 'Location':
-            # Check if user input exists in label_encoder_location.classes_
-            if np.isin(user_inputs[feature], label_encoder_location.classes_):
-                user_inputs[feature] = st.selectbox(feature, label_encoder_location.inverse_transform(np.arange(len(label_encoder_location.classes_))))
-            else:
-                st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
-                user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
+            user_inputs[feature] = st.selectbox(feature, label_encoder_location.inverse_transform(np.arange(len(label_encoder_location.classes_))))
         elif feature == 'WindGustDir':
-            # Check if user input exists in label_encoder_wind_gust_dir.classes_
-            if np.isin(user_inputs[feature], label_encoder_wind_gust_dir.classes_):
-                user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.inverse_transform(np.arange(len(label_encoder_wind_gust_dir.classes_))))
-            else:
-                st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
-                user_inputs[feature] = label_encoder_wind_gust_dir.classes_[0]  # Use most common label
+            user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.inverse_transform(np.arange(len(label_encoder_wind_gust_dir.classes_))))
         elif feature == 'WindDir9am' or feature == 'WindDir3pm':
-            # Check if user input exists in label_encoder_wind_dir_9am.classes_ or label_encoder_wind_dir_3pm.classes_
-            if np.isin(user_inputs[feature], label_encoder_wind_dir_9am.classes_):
-                user_inputs[feature] = st.selectbox(feature, label_encoder_wind_dir_9am.inverse_transform(np.arange(len(label_encoder_wind_dir_9am.classes_))))
-            else:
-                st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
-                user_inputs[feature] = label_encoder_wind_dir_9am.classes_[0]  # Use most common label
+            user_inputs[feature] = st.selectbox(feature, label_encoder_wind_dir_9am.inverse_transform(np.arange(len(label_encoder_wind_dir_9am.classes_))))
         else:
             user_inputs[feature] = st.number_input(feature, value=float(data[feature].mode()[0]))
 
     if st.button('Predict'):
         try:
+            # Check and handle unseen labels for categorical variables
+            for feature in ['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm']:
+                if user_inputs[feature] not in label_encoder_location.classes_:
+                    st.warning(f"Unseen label '{user_inputs[feature]}' for '{feature}', using most common label instead.")
+                    user_inputs[feature] = label_encoder_location.classes_[0]  # Use most common label
+
             # Convert user inputs to DataFrame
             user_data_df = pd.DataFrame([user_inputs])
 
