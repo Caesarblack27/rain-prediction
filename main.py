@@ -108,7 +108,7 @@ def main():
             wind_dir_3pm_code = label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0]
 
             # Prepare user input for prediction
-            user_data_scaled = np.array([[
+            user_data = np.array([[
                 location_code, user_inputs['MinTemp'], user_inputs['MaxTemp'], user_inputs['Rainfall'],
                 user_inputs['Evaporation'], user_inputs['Sunshine'], wind_gust_dir_code,
                 user_inputs['WindGustSpeed'], wind_dir_9am_code, wind_dir_3pm_code,
@@ -117,6 +117,12 @@ def main():
                 user_inputs['Cloud9am'], user_inputs['Cloud3pm'], user_inputs['Temp9am'],
                 user_inputs['Temp3pm']
             ]])
+
+            # Scale numeric user data
+            scaled_user_data = scaler.transform(user_data[:, 1:].astype(float))
+
+            # Combine categorical and scaled numeric data
+            user_data_scaled = np.hstack((user_data[:, 0].reshape(-1, 1), scaled_user_data))
 
             # Make prediction
             prediction = model.predict(user_data_scaled)
