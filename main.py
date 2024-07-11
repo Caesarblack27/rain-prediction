@@ -53,7 +53,7 @@ data['WindDir3pm'] = label_encoder_wind_dir_3pm.fit_transform(data['WindDir3pm']
 label_encoder_rain_today = LabelEncoder()
 data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
 
-# Select only the required features
+# Select all necessary features for prediction
 selected_features = [
     'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
     'WindGustDir', 'WindGustSpeed', 'WindDir9am', 'WindDir3pm', 'WindSpeed9am',
@@ -61,11 +61,11 @@ selected_features = [
     'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday'
 ]
 
-X = data[selected_features]
-
-# Scale features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Check for any new categorical values in WindDir9am and WindDir3pm
+def check_and_update_label_encoder(label_encoder, column, mode_value):
+    if mode_value not in label_encoder.classes_:
+        label_encoder.classes_ = np.append(label_encoder.classes_, mode_value)
+    return label_encoder.transform([mode_value])[0]
 
 # Main Streamlit app
 def main():
@@ -95,13 +95,8 @@ def main():
         wind_dir_9am_mode = data['WindDir9am'].mode()[0]
         wind_dir_3pm_mode = data['WindDir3pm'].mode()[0]
 
-        if wind_dir_9am_mode not in label_encoder_wind_dir_9am.classes_:
-            label_encoder_wind_dir_9am.classes_ = np.append(label_encoder_wind_dir_9am.classes_, wind_dir_9am_mode)
-        encoded_wind_dir_9am = label_encoder_wind_dir_9am.transform([wind_dir_9am_mode])[0]
-
-        if wind_dir_3pm_mode not in label_encoder_wind_dir_3pm.classes_:
-            label_encoder_wind_dir_3pm.classes_ = np.append(label_encoder_wind_dir_3pm.classes_, wind_dir_3pm_mode)
-        encoded_wind_dir_3pm = label_encoder_wind_dir_3pm.transform([wind_dir_3pm_mode])[0]
+        encoded_wind_dir_9am = check_and_update_label_encoder(label_encoder_wind_dir_9am, data['WindDir9am'], wind_dir_9am_mode)
+        encoded_wind_dir_3pm = check_and_update_label_encoder(label_encoder_wind_dir_3pm, data['WindDir3pm'], wind_dir_3pm_mode)
 
         # Prepare user data for prediction
         user_data = {
