@@ -104,7 +104,7 @@ def main():
             #Melakukan prediksi cuaca
             prediction = model.predict(scaled_user_data)
             prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
-            st.write(f'Will it rain tomorrow? {prediction_result}')
+            st.write(f'Apakah besok akan turun hujan? {prediction_result}')
 
         except Exception as e:
             st.error(f"Prediction error: {str(e)}")
