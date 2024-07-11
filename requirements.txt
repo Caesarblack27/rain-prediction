@@ -1,8 +1,6 @@
 streamlit
 pandas
-matplotlib
 numpy
-seaborn
 scikit-learn
+keras
 tensorflow==2.12.0
-joblib
