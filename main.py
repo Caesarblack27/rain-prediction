@@ -125,11 +125,12 @@ def main():
         user_data_df = pd.DataFrame(user_data, index=[0])
 
         # Scale user data
-        user_data_scaled = scaler.transform(user_data_df)
+        user_data_scaled = scaler.transform(user_data_df.values)
 
         # Print the shape of user_data_scaled for debugging
         st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
 
+        
         # Predict
         try:
             prediction = model.predict(user_data_scaled)
