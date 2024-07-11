@@ -43,6 +43,10 @@ data['Location'] = label_encoder_location.fit_transform(data['Location'])
 label_encoder_wind_gust_dir = LabelEncoder()
 data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
 
+# Encode 'RainToday' variable
+label_encoder_rain_today = LabelEncoder()
+data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
+
 # Select only the required features
 selected_features = ['Location', 'MinTemp', 'MaxTemp', 'WindGustDir', 'WindGustSpeed']
 X = data[selected_features]
@@ -69,7 +73,7 @@ default_values = {
     'Cloud3pm': data['Cloud3pm'].mean(),
     'Temp9am': data['Temp9am'].mean(),
     'Temp3pm': data['Temp3pm'].mean(),
-    'RainToday': label_encoder_location.transform([data['RainToday'].mode()[0]])[0]
+    'RainToday': data['RainToday'].mode()[0]
 }
 
 # Main Streamlit app
