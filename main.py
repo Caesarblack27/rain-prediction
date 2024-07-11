@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.model_selection import train_test_split
 from keras.models import load_model
 import requests
 from io import BytesIO
@@ -60,29 +59,33 @@ def main():
 
     # User inputs
     st.subheader('Enter the weather details:')
-    location = st.selectbox('Location', data['Location'].unique())
-    min_temp = st.number_input('MinTemp', min_value=float(data['MinTemp'].min()), max_value=float(data['MinTemp'].max()), value=10.0)
-    max_temp = st.number_input('MaxTemp', min_value=float(data['MaxTemp'].min()), max_value=float(data['MaxTemp'].max()), value=20.0)
-    wind_gust_dir = st.selectbox('WindGustDir', data['WindGustDir'].unique())
-    wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
-
-    if st.button('Predict'):
-        try:
+    try:
+        location = st.selectbox('Location', data['Location'].unique())
+        min_temp = st.number_input('MinTemp', min_value=float(data['MinTemp'].min()), max_value=float(data['MinTemp'].max()), value=10.0)
+        max_temp = st.number_input('MaxTemp', min_value=float(data['MaxTemp'].min()), max_value=float(data['MaxTemp'].max()), value=20.0)
+        wind_gust_dir = st.selectbox('WindGustDir', data['WindGustDir'].unique())
+        wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
+        
+        if st.button('Predict'):
             # Encode and scale user input
             user_data = pd.DataFrame({
-                'Location': [label_encoder.transform([location])[0]],
+                'Location': [location],
                 'MinTemp': [min_temp],
                 'MaxTemp': [max_temp],
-                'WindGustDir': [label_encoder.transform([wind_gust_dir])[0]],
+                'WindGustDir': [wind_gust_dir],
                 'WindGustSpeed': [wind_gust_speed]
             })
+
+            # Transform categorical variables using label encoder
+            user_data['Location'] = label_encoder.transform(user_data['Location'])
+            user_data['WindGustDir'] = label_encoder.transform(user_data['WindGustDir'])
 
             # Predict
             prediction = predict_rain(model, user_data)
             st.write(f'Will it rain today? {"Yes" if prediction[0][0] >= 0.5 else "No"}')
 
-        except ValueError as e:
-            st.error(str(e))
+    except ValueError as e:
+        st.error(str(e))
 
 if __name__ == '__main__':
     main()
