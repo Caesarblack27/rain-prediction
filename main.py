@@ -76,7 +76,7 @@ def main():
     scaler = StandardScaler()
 
     # Prepare numeric data for scaling
-    numeric_data = data.drop(columns=['RainTomorrow'])  # Assuming 'RainTomorrow' is the target column
+    numeric_data = data.drop(columns=['Date', 'RainToday', 'RainTomorrow'])  # Remove unnecessary columns
     numeric_data = numeric_data.apply(pd.to_numeric, errors='coerce').fillna(0)  # Convert non-numeric to NaN and fill with 0
 
     # Fit scaler with numeric data
