@@ -53,19 +53,15 @@ data['WindDir3pm'] = label_encoder_wind_dir_3pm.fit_transform(data['WindDir3pm']
 label_encoder_rain_today = LabelEncoder()
 data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
 
-# Select all necessary features for prediction
-selected_features = [
+# Define all features needed for prediction
+all_features = [
     'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
     'WindGustDir', 'WindGustSpeed', 'WindDir9am', 'WindDir3pm', 'WindSpeed9am',
     'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
-    'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday'
+    'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday',
+    # Add additional features needed by the model here
+    # Make sure to fill them with appropriate default values
 ]
-
-# Check for any new categorical values in WindDir9am and WindDir3pm
-def check_and_update_label_encoder(label_encoder, column, mode_value):
-    if mode_value not in label_encoder.classes_:
-        label_encoder.classes_ = np.append(label_encoder.classes_, mode_value)
-    return label_encoder.transform([mode_value])[0]
 
 # Main Streamlit app
 def main():
@@ -81,66 +77,71 @@ def main():
     # Define scaler here, after model is loaded
     scaler = StandardScaler()
 
-    # Fit scaler to selected features
-    scaler.fit(data[selected_features])
-
     # User inputs
     st.subheader('Enter the weather details:')
-    location = st.selectbox('Location', label_encoder_location.classes_)
-    min_temp = st.number_input('MinTemp', min_value=float(data['MinTemp'].min()), max_value=float(data['MinTemp'].max()), value=10.0)
-    max_temp = st.number_input('MaxTemp', min_value=float(data['MaxTemp'].min()), max_value=float(data['MaxTemp'].max()), value=20.0)
-    wind_gust_dir = st.selectbox('WindGustDir', label_encoder_wind_gust_dir.classes_)
-    wind_gust_speed = st.number_input('WindGustSpeed', min_value=float(data['WindGustSpeed'].min()), max_value=float(data['WindGustSpeed'].max()), value=30.0)
+    
+    # Initialize user input variables
+    user_inputs = {}
+    
+    # Collect user inputs for each feature
+    for feature in all_features:
+        if feature == 'Location':
+            user_inputs[feature] = st.selectbox(feature, label_encoder_location.classes_)
+        elif feature == 'WindGustDir':
+            user_inputs[feature] = st.selectbox(feature, label_encoder_wind_gust_dir.classes_)
+        else:
+            user_inputs[feature] = st.number_input(feature, value=float(data[feature].mode()[0]))
 
     if st.button('Predict'):
-        # Encode user input
-        encoded_location = label_encoder_location.transform([location])[0]
-        encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
-
-        # Handle unseen labels in WindDir9am and WindDir3pm
-        wind_dir_9am_mode = data['WindDir9am'].mode()[0]
-        wind_dir_3pm_mode = data['WindDir3pm'].mode()[0]
-
-        encoded_wind_dir_9am = check_and_update_label_encoder(label_encoder_wind_dir_9am, data['WindDir9am'], wind_dir_9am_mode)
-        encoded_wind_dir_3pm = check_and_update_label_encoder(label_encoder_wind_dir_3pm, data['WindDir3pm'], wind_dir_3pm_mode)
-
-        # Prepare user data for prediction
-        user_data = {
-            'Location': encoded_location,
-            'MinTemp': min_temp,
-            'MaxTemp': max_temp,
-            'Rainfall': data['Rainfall'].mode()[0],
-            'Evaporation': data['Evaporation'].mode()[0],
-            'Sunshine': data['Sunshine'].mode()[0],
-            'WindGustDir': encoded_wind_gust_dir,
-            'WindGustSpeed': wind_gust_speed,
-            'WindDir9am': encoded_wind_dir_9am,
-            'WindDir3pm': encoded_wind_dir_3pm,
-            'WindSpeed9am': data['WindSpeed9am'].mode()[0],
-            'WindSpeed3pm': data['WindSpeed3pm'].mode()[0],
-            'Humidity9am': data['Humidity9am'].mode()[0],
-            'Humidity3pm': data['Humidity3pm'].mode()[0],
-            'Pressure9am': data['Pressure9am'].mode()[0],
-            'Pressure3pm': data['Pressure3pm'].mode()[0],
-            'Cloud9am': data['Cloud9am'].mode()[0],
-            'Cloud3pm': data['Cloud3pm'].mode()[0],
-            'Temp9am': data['Temp9am'].mode()[0],
-            'Temp3pm': data['Temp3pm'].mode()[0],
-            'RainToday': data['RainToday'].mode()[0]
-        }
-        user_data_df = pd.DataFrame(user_data, index=[0])
-
-        # Scale user data
-        user_data_scaled = scaler.transform(user_data_df[selected_features])
-
-        # Print the shape of user_data_scaled for debugging
-        st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
-
-        # Predict
         try:
+            # Create DataFrame from user inputs
+            user_data_df = pd.DataFrame(user_inputs, index=[0])
+
+            # Handle unseen labels in WindDir9am and WindDir3pm
+            wind_dir_9am_mode = data['WindDir9am'].mode()[0]
+            wind_dir_3pm_mode = data['WindDir3pm'].mode()[0]
+
+            check_and_update_label_encoder(label_encoder_wind_dir_9am, data['WindDir9am'], wind_dir_9am_mode)
+            check_and_update_label_encoder(label_encoder_wind_dir_3pm, data['WindDir3pm'], wind_dir_3pm_mode)
+
+            # Prepare user data for prediction
+            user_data = {
+                'Location': label_encoder_location.transform([user_inputs['Location']])[0],
+                'MinTemp': user_inputs['MinTemp'],
+                'MaxTemp': user_inputs['MaxTemp'],
+                'Rainfall': user_inputs['Rainfall'],
+                'Evaporation': user_inputs['Evaporation'],
+                'Sunshine': user_inputs['Sunshine'],
+                'WindGustDir': label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0],
+                'WindGustSpeed': user_inputs['WindGustSpeed'],
+                'WindDir9am': label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0],
+                'WindDir3pm': label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0],
+                'WindSpeed9am': user_inputs['WindSpeed9am'],
+                'WindSpeed3pm': user_inputs['WindSpeed3pm'],
+                'Humidity9am': user_inputs['Humidity9am'],
+                'Humidity3pm': user_inputs['Humidity3pm'],
+                'Pressure9am': user_inputs['Pressure9am'],
+                'Pressure3pm': user_inputs['Pressure3pm'],
+                'Cloud9am': user_inputs['Cloud9am'],
+                'Cloud3pm': user_inputs['Cloud3pm'],
+                'Temp9am': user_inputs['Temp9am'],
+                'Temp3pm': user_inputs['Temp3pm'],
+                'RainToday': user_inputs['RainToday']
+            }
+
+            user_data_df = pd.DataFrame(user_data, index=[0])
+
+            # Scale user data
+            user_data_scaled = scaler.transform(user_data_df)
+
+            # Print the shape of user_data_scaled for debugging
+            st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
+
+            # Predict
             prediction = model.predict(user_data_scaled)
             prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
             st.write(f'Will it rain tomorrow? {prediction_result}')
+
         except Exception as e:
             st.error(f"Prediction error: {str(e)}")
 
