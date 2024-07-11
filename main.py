@@ -43,14 +43,34 @@ data['Location'] = label_encoder_location.fit_transform(data['Location'])
 label_encoder_wind_gust_dir = LabelEncoder()
 data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
 
-# Select only the required features
+# Feature and label separation
 selected_features = ['Location', 'MinTemp', 'MaxTemp', 'WindGustDir', 'WindGustSpeed']
 X = data[selected_features]
 y = data['RainTomorrow']
 
+# Add default values for other features
+default_values = {
+    'Rainfall': data['Rainfall'].mean(),
+    'Evaporation': data['Evaporation'].mean(),
+    'Sunshine': data['Sunshine'].mean(),
+    'WindDir9am': label_encoder_wind_gust_dir.transform([data['WindDir9am'].mode()[0]])[0],
+    'WindDir3pm': label_encoder_wind_gust_dir.transform([data['WindDir3pm'].mode()[0]])[0],
+    'WindSpeed9am': data['WindSpeed9am'].mean(),
+    'WindSpeed3pm': data['WindSpeed3pm'].mean(),
+    'Humidity9am': data['Humidity9am'].mean(),
+    'Humidity3pm': data['Humidity3pm'].mean(),
+    'Pressure9am': data['Pressure9am'].mean(),
+    'Pressure3pm': data['Pressure3pm'].mean(),
+    'Cloud9am': data['Cloud9am'].mean(),
+    'Cloud3pm': data['Cloud3pm'].mean(),
+    'Temp9am': data['Temp9am'].mean(),
+    'Temp3pm': data['Temp3pm'].mean(),
+    'RainToday': label_encoder_location.transform([data['RainToday'].mode()[0]])[0]
+}
+
 # Scale features
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+X = scaler.fit_transform(data)
 
 # Main Streamlit app
 def main():
@@ -77,10 +97,33 @@ def main():
         encoded_wind_gust_dir = label_encoder_wind_gust_dir.transform([wind_gust_dir])[0]
 
         # Prepare user data for prediction
-        user_data = [[encoded_location, min_temp, max_temp, encoded_wind_gust_dir, wind_gust_speed]]
+        user_data = {
+            'Location': encoded_location,
+            'MinTemp': min_temp,
+            'MaxTemp': max_temp,
+            'WindGustDir': encoded_wind_gust_dir,
+            'WindGustSpeed': wind_gust_speed,
+            'Rainfall': default_values['Rainfall'],
+            'Evaporation': default_values['Evaporation'],
+            'Sunshine': default_values['Sunshine'],
+            'WindDir9am': default_values['WindDir9am'],
+            'WindDir3pm': default_values['WindDir3pm'],
+            'WindSpeed9am': default_values['WindSpeed9am'],
+            'WindSpeed3pm': default_values['WindSpeed3pm'],
+            'Humidity9am': default_values['Humidity9am'],
+            'Humidity3pm': default_values['Humidity3pm'],
+            'Pressure9am': default_values['Pressure9am'],
+            'Pressure3pm': default_values['Pressure3pm'],
+            'Cloud9am': default_values['Cloud9am'],
+            'Cloud3pm': default_values['Cloud3pm'],
+            'Temp9am': default_values['Temp9am'],
+            'Temp3pm': default_values['Temp3pm'],
+            'RainToday': default_values['RainToday']
+        }
+        user_data_df = pd.DataFrame(user_data, index=[0])
 
         # Scale user data
-        user_data_scaled = scaler.transform(user_data)
+        user_data_scaled = scaler.transform(user_data_df)
 
         # Print the shape of user_data_scaled for debugging
         st.write(f"Shape of user_data_scaled: {user_data_scaled.shape}")
