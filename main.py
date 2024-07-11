@@ -8,14 +8,12 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import load_model
 
-# Load data from URL
+#Kita masukan dataset
 url = "https://raw.githubusercontent.com/Caesarblack27/rain-prediction/main/weatherAUS.csv"
 data = pd.read_csv(url)
-
-# Fill missing values
 data.fillna(data.mode().iloc[0], inplace=True)
 
-# Encode categorical variables
+#Melakukan encoding untuk praproses data
 label_encoder_location = LabelEncoder()
 data['Location'] = label_encoder_location.fit_transform(data['Location'])
 
@@ -31,7 +29,7 @@ data['WindDir3pm'] = label_encoder_wind_dir_3pm.fit_transform(data['WindDir3pm']
 label_encoder_rain_today = LabelEncoder()
 data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
 
-# Define all features needed for prediction
+#Memperjelas fitur-fitur yang akan digunakan
 all_features = [
     'Location', 'MinTemp', 'MaxTemp', 'Rainfall', 'Evaporation', 'Sunshine',
     'WindGustDir', 'WindGustSpeed', 'WindDir9am', 'WindDir3pm', 'WindSpeed9am',
@@ -39,19 +37,18 @@ all_features = [
     'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm'
 ]
 
-# Prepare dataset for training
+#Melakukan data training
 X = data[all_features]
 y = data['RainTomorrow'].apply(lambda x: 1 if x == 'Yes' else 0)
 
-# Split the dataset into training and testing sets
+#Membagi data set 80% training 20%latih untuk data latih
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Standardize the dataset
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
 
-# Function to create the model
+#Membuat data model
 def create_model(input_dim):
     model = Sequential()
     model.add(Dense(64, input_dim=input_dim, activation='relu'))
@@ -60,14 +57,13 @@ def create_model(input_dim):
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-# Main Streamlit app
+#Tampilan UI pada aplikasi Streamlit
 def main():
     st.title('Rain Prediction App')
 
-    # Initialize user input variables
+    #Memasukkan user input
     user_inputs = {}
 
-    # Collect user inputs for each feature
     for feature in all_features:
         if feature == 'Location':
             user_inputs[feature] = st.selectbox(feature, label_encoder_location.inverse_transform(np.arange(len(label_encoder_location.classes_))))
@@ -79,36 +75,33 @@ def main():
             user_inputs[feature] = st.number_input(feature, value=float(data[feature].mode()[0]))
 
     if st.button('Train Model'):
-        # Create and train the model
+        #Memasukan data yang user input untuk menjadi data latih
         model = create_model(X_train_scaled.shape[1])
         early_stopping = EarlyStopping(monitor='val_loss', patience=5)
         history = model.fit(X_train_scaled, y_train, epochs=20, validation_split=0.2, callbacks=[early_stopping])
 
-        # Save the model
+        #Menyimpan model data
         model.save('rain_prediction_model.h5')
         st.success('Model trained and saved successfully!')
 
     if st.button('Predict'):
         try:
-            # Ensure all categorical features are transformed correctly
+            #Memastikan kembali apakah data terisi dengan benar
             user_inputs['Location'] = label_encoder_location.transform([user_inputs['Location']])[0]
             user_inputs['WindGustDir'] = label_encoder_wind_gust_dir.transform([user_inputs['WindGustDir']])[0]
             user_inputs['WindDir9am'] = label_encoder_wind_dir_9am.transform([user_inputs['WindDir9am']])[0]
             user_inputs['WindDir3pm'] = label_encoder_wind_dir_3pm.transform([user_inputs['WindDir3pm']])[0]
 
-            # Convert user inputs to DataFrame
             user_data_df = pd.DataFrame([user_inputs])
 
-            # Ensure numeric data is in correct format for scaling
             numeric_user_data = user_data_df[all_features].apply(pd.to_numeric, errors='coerce').fillna(0)
 
-            # Scale numeric user data
             scaled_user_data = scaler.transform(numeric_user_data)
 
-            # Load the trained model
+            #Memanggil data model
             model = load_model('rain_prediction_model.h5')
 
-            # Make prediction
+            #Melakukan prediksi cuaca
             prediction = model.predict(scaled_user_data)
             prediction_result = "Yes" if prediction[0][0] >= 0.5 else "No"
             st.write(f'Will it rain tomorrow? {prediction_result}')
