@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.models import load_model
 import requests
-from io import BytesIO
 
 # Function to load the pretrained model
 @st.cache(allow_output_mutation=True)
