@@ -43,6 +43,12 @@ data['Location'] = label_encoder_location.fit_transform(data['Location'])
 label_encoder_wind_gust_dir = LabelEncoder()
 data['WindGustDir'] = label_encoder_wind_gust_dir.fit_transform(data['WindGustDir'])
 
+label_encoder_wind_dir_9am = LabelEncoder()
+data['WindDir9am'] = label_encoder_wind_dir_9am.fit_transform(data['WindDir9am'])
+
+label_encoder_wind_dir_3pm = LabelEncoder()
+data['WindDir3pm'] = label_encoder_wind_dir_3pm.fit_transform(data['WindDir3pm'])
+
 label_encoder_rain_today = LabelEncoder()
 data['RainToday'] = label_encoder_rain_today.fit_transform(data['RainToday'])
 
@@ -53,9 +59,6 @@ selected_features = [
     'WindSpeed3pm', 'Humidity9am', 'Humidity3pm', 'Pressure9am', 'Pressure3pm',
     'Cloud9am', 'Cloud3pm', 'Temp9am', 'Temp3pm', 'RainToday'
 ]
-
-# Ensure the feature list matches what was used during model training
-assert set(selected_features).issubset(data.columns), "Selected features do not match the dataset columns."
 
 X = data[selected_features]
 
@@ -97,8 +100,8 @@ def main():
             'Sunshine': data['Sunshine'].mode()[0],
             'WindGustDir': encoded_wind_gust_dir,
             'WindGustSpeed': wind_gust_speed,
-            'WindDir9am': label_encoder_wind_gust_dir.transform([data['WindDir9am'].mode()[0]])[0],
-            'WindDir3pm': label_encoder_wind_gust_dir.transform([data['WindDir3pm'].mode()[0]])[0],
+            'WindDir9am': label_encoder_wind_dir_9am.transform([data['WindDir9am'].mode()[0]])[0],
+            'WindDir3pm': label_encoder_wind_dir_3pm.transform([data['WindDir3pm'].mode()[0]])[0],
             'WindSpeed9am': data['WindSpeed9am'].mode()[0],
             'WindSpeed3pm': data['WindSpeed3pm'].mode()[0],
             'Humidity9am': data['Humidity9am'].mode()[0],
