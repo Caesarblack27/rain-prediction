@@ -111,7 +111,7 @@ def main():
             user_data_df = pd.DataFrame([user_inputs])
 
             # Ensure numeric data is in correct format for scaling
-            numeric_user_data = user_data_df.drop(columns=['Location', 'WindGustDir', 'WindDir9am', 'WindDir3pm'])
+            numeric_user_data = user_data_df[numeric_data.columns]  # Ensure columns match
             numeric_user_data = numeric_user_data.apply(pd.to_numeric, errors='coerce').fillna(0)
 
             # Scale numeric user data
